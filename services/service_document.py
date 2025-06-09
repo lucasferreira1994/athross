@@ -1,8 +1,13 @@
 from sqlalchemy.orm import Session
-from . import models, schemas
 import uuid
 
-def document_create(db: Session, doc_data: schemas.DocumentCreate):
+import models.model_document as model_document
+import models.model_label as model_label
+import api.schemas.schema_document as schema_document
+
+
+
+def document_create(db: Session, doc_data: schema_document.DocumentCreate):
     db_doc = models.Document(
         id=uuid.uuid4(),
         hash=doc_data.hash,

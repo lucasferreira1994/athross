@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 
-from ..database import Base
+from database import Base
 
 class DocumentType(Base):
     __tablename__ = 'document_types'
