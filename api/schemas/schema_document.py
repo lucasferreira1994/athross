@@ -1,4 +1,4 @@
-from pydantic import BaseModel, UUID4, Field
+from pydantic import BaseModel, UUID4, Field, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 from api.schemas.schema_document_type import DocumentType
@@ -21,5 +21,5 @@ class Document(DocumentBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        orm_mode = True
+    class ConfigDict:
+        model_config = ConfigDict(from_attributes=True)
