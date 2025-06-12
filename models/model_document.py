@@ -1,25 +1,13 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Table, Enum, and_
+from sqlalchemy import Column, String, DateTime, ForeignKey, Table, Enum, event
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Session
 from datetime import datetime
 import uuid
 import enum
 
 from database import Base
-import models.model_label  as model_label
-
-
-class LabelType(enum.Enum):
-    input = 'input'
-    rules = 'rules'
-
-document_label = Table(
-    'document_label',
-    Base.metadata,
-    Column('document_id', pgUUID(as_uuid=True), ForeignKey('documents.id'), primary_key=True),
-    Column('label_id', pgUUID(as_uuid=True), ForeignKey('labels.id'), primary_key=True),
-    Column('type', Enum(LabelType, name='label_type_enum'), nullable=False)
-)
+import models.model_label as model_label
+from models.model_relationship import document_label
 
 class Document(Base):
     __tablename__ = 'documents'
@@ -36,8 +24,20 @@ class Document(Base):
     type = relationship("DocumentType")
 
     labels = relationship(
-        model_label.Label,
+        "Label",
         secondary=document_label,
-        back_populates="documents"
+        back_populates="documents",
+        lazy="joined"  # Opcional: carrega automaticamente ao buscar Document
     )
 
+def generate_labels_string(labels):
+    return ",".join([f"{label.key}={label.value}" for label in labels])
+
+
+@event.listens_for(Session, "before_flush")
+def update_labels_string(session, flush_context, _):
+    for instance in session.new.union(session.dirty):
+        if isinstance(instance, Document):
+            new_value = generate_labels_string(instance.labels or [])
+            if instance.labels_string != new_value:
+                instance.labels_string = new_value

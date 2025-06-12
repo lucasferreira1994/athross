@@ -5,6 +5,7 @@ from datetime import datetime
 import uuid
 
 from database import Base
+from models.model_relationship import document_label
 
 class Label(Base):
     __tablename__ = 'labels'
@@ -17,7 +18,7 @@ class Label(Base):
 
     documents = relationship(
         "Document",
-        secondary='document_label',
+        secondary=document_label,
         back_populates='labels'
     )
 

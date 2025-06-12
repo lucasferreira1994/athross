@@ -16,15 +16,13 @@ def db_get():
         db.close()
 
 @router.get("/", response_model=List[schema_document.Document])
-def document_list(db: Session = Depends(db_get)):
-    return db.query(model_document.Document).all()
+def list_all(db: Session = Depends(db_get)):
+    return service_document.list_all(db)
 
-@router.post("/", response_model=schema_document.Document)
-def document_create(document: schema_document.DocumentCreate, db: Session = Depends(db_get)):
-    # Verifica se o hash já existe
-    db_doc = db.query(model_document.Document).filter_by(hash=document.hash).first()
-    if db_doc:
-        raise HTTPException(status_code=400, detail="Document hash already exists")
-    
-    return service_document.create_document(db, document)
+@router.post("/", response_model=List[schema_document.Document])
+def create(documents: List[schema_document.DocumentCreate], db: Session = Depends(db_get)):
+    return service_document.get_and_update_or_create(db, documents)
 
+@router.delete("/", response_model=List[schema_document.Document])
+def delete_all(db: Session = Depends(db_get)):
+    return service_document.delete_all(db)

@@ -10,5 +10,5 @@ app.include_router(route_label.router)
 
 app.include_router(route_document_type.router)
 
-# app.include_router(route_label.routes)
-# app.include_router(route_document_type.routes)
+app.include_router(route_document.router)
+
