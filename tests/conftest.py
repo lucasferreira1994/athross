@@ -8,7 +8,6 @@ from fastapi.testclient import TestClient
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
-# Criando engine e sessionmaker para testes
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
