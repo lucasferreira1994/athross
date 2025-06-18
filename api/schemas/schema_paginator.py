@@ -9,5 +9,5 @@ class PaginatedResponse(BaseModel, Generic[T]):
     skip: int
     limit: int
 
-    class Config:
+    class ConfigDict:
         from_attributes = True

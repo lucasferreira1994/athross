@@ -6,7 +6,7 @@ TAG = os.path.basename(__file__) + ": "
 logger = get_logger(TAG)
 
 
-def test_create_list_delete_document_types(client):
+async def test_create_list_delete_document_types(async_client):
     logger.info("Iniciando test_create_list_delete_document_types")
 
     payload = [
@@ -17,7 +17,7 @@ def test_create_list_delete_document_types(client):
     ]
     logger.info(f"Payload utilizado para teste: {payload}")
 
-    create_resp = client.post("/document-types/", json=payload)
+    create_resp = await async_client.post("/document-types/", json=payload)
     logger.info(f"Response da criação: {create_resp.json()}")
     assert create_resp.status_code == 200
     logger.info(f"Resposta de criação OK, status code: {create_resp.status_code}")
@@ -31,7 +31,7 @@ def test_create_list_delete_document_types(client):
         assert expected in created_names
         logger.info(f"Item '{expected}' confirmado na resposta de criação")
 
-    list_resp = client.get("/document-types/")
+    list_resp = await async_client.get("/document-types/")
     logger.info(f"Response da listagem: status {list_resp.status_code}")
     assert list_resp.status_code == 200
 
@@ -47,7 +47,7 @@ def test_create_list_delete_document_types(client):
 
     logger.info("Iniciando remoção dos itens listados")
     for item in list_data["items"]:
-        delete_resp = client.delete(f"/document-types/{item['id']}")
+        delete_resp = await async_client.delete(f"/document-types/{item['id']}")
         logger.info(f"Delete /document-types/{item['id']} status {delete_resp.status_code}")
         assert delete_resp.status_code == 200
 
@@ -57,7 +57,7 @@ def test_create_list_delete_document_types(client):
         assert deleted_item["name"] == item["name"]
         logger.info(f"Item '{item['name']}' removido com sucesso")
 
-    final_list = client.get("/document-types/")
+    final_list = await async_client.get("/document-types/")
     logger.info(f"Response da listagem final após exclusões: status {final_list.status_code}")
     assert final_list.status_code == 200
 
@@ -68,12 +68,14 @@ def test_create_list_delete_document_types(client):
     logger.info("Todos os itens removidos com sucesso. Teste concluído")
 
 
-def test_delete_nonexistent_document_type(client):
+async def test_delete_nonexistent_document_type(async_client):
     fake_id = str(uuid.uuid4())
     logger.info(f"Iniciando test_delete_nonexistent_document_type com id falso: {fake_id}")
 
-    resp = client.delete(f"/document-types/{fake_id}")
+    resp = await async_client.delete(f"/document-types/{fake_id}")
     logger.info(f"Response da exclusão de id inexistente: status {resp.status_code}, body: {resp.json()}")
     assert resp.status_code == 404
     assert resp.json()["detail"] == "DocumentType not found"
     logger.info("Confirmação da resposta 404 para exclusão de id inexistente concluída")
+
+    logger.info("Finalizando test_delete_nonexistent_document_type com sucesso")

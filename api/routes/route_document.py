@@ -1,28 +1,29 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
-from database import SessionLocal
+from database import get_async_db
 import api.schemas.schema_document as schema_document
-import models.model_document as model_document
 import services.service_document as service_document
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
-def db_get():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 @router.get("/", response_model=List[schema_document.Document])
-def list_all(db: Session = Depends(db_get)):
-    return service_document.list_all(db)
+async def list_all(db: AsyncSession = Depends(get_async_db)):
+    response = await service_document.list_all(db)
+    return response
+
 
 @router.post("/", response_model=List[schema_document.Document])
-def create(documents: List[schema_document.DocumentCreate], db: Session = Depends(db_get)):
-    return service_document.get_and_update_or_create(db, documents)
+async def create(
+    documents: List[schema_document.DocumentCreate],
+    db: AsyncSession = Depends(get_async_db)
+):
+    response = await service_document.create_or_update_documents(db, documents)
+    return response
 
-@router.delete("/", response_model=List[schema_document.Document])
-def delete_all(db: Session = Depends(db_get)):
-    return service_document.delete_all(db)
+
+@router.delete("/", response_model=None)
+async def delete_all(db: AsyncSession = Depends(get_async_db)):
+    await service_document.delete_all(db)
+    return {"detail": "All documents deleted"}

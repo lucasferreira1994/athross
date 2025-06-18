@@ -5,6 +5,8 @@ from sqlalchemy.pool import StaticPool
 from database import Base, get_async_db
 from main import app
 from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
+
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -40,3 +42,10 @@ app.dependency_overrides[get_async_db] = override_get_async_db
 def client():
     with TestClient(app, raise_server_exceptions=True) as c:
         yield c
+
+@pytest.fixture
+async def async_client():
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test") as ac:
+        yield ac

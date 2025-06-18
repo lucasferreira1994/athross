@@ -4,14 +4,16 @@ import logging
 
 class TestLogger:
     def __init__(self, tag: str):
-        self.tag = tag
+        self.tag = tag.split(".")[0]
         self.logger = logging.getLogger(tag)
         self.logger.setLevel(logging.INFO)
 
         self._create_dir()
 
-        log_path = os.path.join("test_logs", "test_document_types.log")
-
+        log_path = os.path.join("test_logs", "{}.log".format(self.tag))
+        if os.path.exists(log_path):
+            os.remove(log_path)
+            
         if not self.logger.handlers:
             formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 
