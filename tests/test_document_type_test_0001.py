@@ -19,7 +19,7 @@ async def test_create_list_delete_document_types(async_client):
 
     create_resp = await async_client.post("/document-types/", json=payload)
     logger.info(f"Response da criação: {create_resp.json()}")
-    assert create_resp.status_code == 200
+    assert create_resp.status_code == 201
     logger.info(f"Resposta de criação OK, status code: {create_resp.status_code}")
 
     created_items = create_resp.json()

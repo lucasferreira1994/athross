@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from models import model_user
-from api import schemas
+from api.schemas import schema_user
 from utils import security
 
-async def create_user(db: AsyncSession, user: schemas.UserCreate):
+async def create_user(db: AsyncSession, user: schema_user.UserCreate) -> model_user.User:
     security.validate_password(user.password, user.confirm_password)
     encrypted_password = security.hash_password(user.password)
     user = model_user.User(
@@ -23,7 +23,7 @@ async def update_user_profile(
     email: str,
     password: str | None,
     confirm_password: str | None,
-):
+) -> model_user.User:
     user.username = username
     user.email = email
 
@@ -35,3 +35,7 @@ async def update_user_profile(
     await db.refresh(user)
 
     return user
+
+
+async def get_user(db: AsyncSession, user_uuid: str) -> model_user.User:
+    return await db.get(model_user.User, user_uuid)

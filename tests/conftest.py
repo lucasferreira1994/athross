@@ -49,3 +49,8 @@ async def async_client():
         transport=ASGITransport(app=app),
         base_url="http://test") as ac:
         yield ac
+
+@pytest.fixture
+async def async_session():
+    async with TestSessionLocal() as session:
+        yield session

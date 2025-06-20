@@ -17,7 +17,7 @@ async def test_label_crud(async_client):
     ]
 
     create_response = await async_client.post("/labels/", json=payload)
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
     created_labels = create_response.json()
     assert len(created_labels) == len(payload)
 

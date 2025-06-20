@@ -29,7 +29,7 @@ async def test_create_list_delete_documents(async_client):
 
     create_resp = await async_client.post("/documents/", json=payload)
     logger.info(f"Response de criação: status={create_resp.status_code} body={create_resp.json()}")
-    assert create_resp.status_code == 200
+    assert create_resp.status_code == 201
 
     created_docs = create_resp.json()
     assert len(created_docs) == 1
@@ -59,7 +59,7 @@ async def test_create_list_delete_documents(async_client):
     logger.info(f"Payload de atualização: {json.dumps(update_payload, indent=2)}")
     update_resp = await async_client.post("/documents/", json=update_payload)
     logger.info(f"Response de atualização: status={update_resp.status_code} body={update_resp.json()}")
-    assert update_resp.status_code == 200
+    assert update_resp.status_code == 201
 
     final_list_resp = await async_client.get("/documents/")
     logger.info(f"Response de listagem final: status={final_list_resp.status_code} body={final_list_resp.json()}")

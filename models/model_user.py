@@ -18,9 +18,5 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    subscriptions = relationship("UserSubscription", back_populates="user")
-    posts = relationship("Post", back_populates="user")
-    bookmarks = relationship("PostBookmark", back_populates="user")
-
     def __repr__(self):
         return f"<User {self.username}>"

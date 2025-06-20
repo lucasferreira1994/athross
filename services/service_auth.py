@@ -2,7 +2,7 @@ import jwt
 import os
 import datetime
 import uuid
-import models
+from models import model_user
 from dotenv import load_dotenv
 from fastapi import HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
@@ -49,8 +49,8 @@ def verify_token(token:str = Depends(oauth2_scheme)) -> str:
         raise HTTPException(status_code=401, detail="Invalid token: {}".format(e))
 
 
-async def get_user_by_token(db: AsyncSession, access_token: str) -> models.User:
+async def get_user_by_token(db: AsyncSession, access_token: str) -> model_user.User:
     user_uuid = verify_token(access_token)
-    stmt = select(models.User).where(models.User.uuid == user_uuid)
+    stmt = select(model_user.User).where(model_user.User.uuid == user_uuid)
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
