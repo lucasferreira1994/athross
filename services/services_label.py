@@ -1,8 +1,24 @@
 import json
 import datetime
 from collections import defaultdict
+from typing import List, Dict, Set, Optional, Union, Any, DefaultDict
 
-def find_related_documents(documents, labels_to_find, visited=None, depth=0, max_depth=10):
+Document = Dict[str, Any]
+Label = Dict[str, str]
+DocumentsList = List[Document]
+LabelsList = List[Label]
+RelationsList = List[Dict[str, Union[str, List[str]]]]
+NetworkDict = Dict[str, List[Dict[str, str]]]
+
+
+def find_related_documents(
+        documents: DocumentsList,
+        labels_to_find: LabelsList,
+        visited: Optional[Set[str]] = None,
+        depth: int = 0,
+        max_depth: int = 10
+    ) -> DocumentsList:
+
     if visited is None:
         visited = set()
     if depth >= max_depth:
@@ -34,7 +50,12 @@ def find_related_documents(documents, labels_to_find, visited=None, depth=0, max
     return related_docs
 
 
-def generate_relations_json(documents, initial_labels, output_file="relations.json"):
+def generate_relations_json(
+        documents: DocumentsList,
+        initial_labels: LabelsList,
+        output_file: str = "relations.json"
+    ) -> Dict[str, Union[Dict[str, Any], DefaultDict[str, List[Document]], RelationsList, NetworkDict]]:
+    
     related_docs = find_related_documents(documents, initial_labels)
     
     docs_by_type = defaultdict(list)
@@ -86,20 +107,3 @@ def generate_relations_json(documents, initial_labels, output_file="relations.js
     return result
 
 
-
-if __name__ == "__main__":
-    import datetime
-    name = f"documents_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open("documents.json", "r") as f:
-        documents = json.load(f)
-    
-    initial_labels = [
-        {"key": "domain", "value": "app-dev.example.com"}
-    ]
-    
-    result = generate_relations_json(
-        documents=documents,
-        initial_labels=initial_labels,
-        output_file=name
-    )
-    
