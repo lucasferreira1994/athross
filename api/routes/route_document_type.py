@@ -3,7 +3,7 @@ from pydantic import UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 import api.schemas.schema_document_type as schema_document_type
-import services.service_document_type as service_document_type
+import repository.repository_document_type as repository_document_type
 from factory.factory_database import get_async_db
 from api.schemas.schema_paginator import PaginatedResponse
 
@@ -55,7 +55,7 @@ async def list_all(
         "limit": int
     }
     """
-    items, total = await service_document_type.list_all(db, skip=skip, limit=limit)
+    items, total = await repository_document_type.list_all(db, skip=skip, limit=limit)
     return {
         "items": items,
         "total": total,
@@ -87,7 +87,7 @@ async def create(
     Returns:
     List[DocumentType]: Created or existing document type objects
     """
-    response = await service_document_type.get_or_create(db, document_types)
+    response = await repository_document_type.get_or_create(db, document_types)
     return response
 
 @router.patch(
@@ -120,7 +120,7 @@ async def update(
     Raises:
     HTTPException 404: If any document type to update is not found
     """
-    response = await service_document_type.patch(db, document_types)
+    response = await repository_document_type.patch(db, document_types)
     return response
 
 @router.delete(
@@ -151,5 +151,5 @@ async def delete(
     Raises:
     HTTPException 404: If no document type exists with the specified ID
     """
-    response = await service_document_type.delete(db, document_type_id)
+    response = await repository_document_type.delete(db, document_type_id)
     return response

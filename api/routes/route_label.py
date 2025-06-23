@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from database import get_async_db
 import api.schemas.schema_label as schema_label
-import services.service_label as service_label
+import repository.repository_label as repository_label
 
 router = APIRouter(
     prefix="/labels",
@@ -30,7 +30,7 @@ async def list_all(db: AsyncSession = Depends(get_async_db)):
     Returns:
     List[Label]: A list containing all label objects with their details.
     """
-    return await service_label.list_all(db)
+    return await repository_label.list_all(db)
 
 
 @router.post(
@@ -57,7 +57,7 @@ async def create(
     Returns:
     List[Label]: List of label objects that were created or already existed.
     """
-    return await service_label.get_or_create(db, labels)
+    return await repository_label.get_or_create(db, labels)
 
 
 @router.patch(
@@ -86,7 +86,7 @@ async def update(
     Raises:
     HTTPException 404: If any of the labels to update are not found
     """
-    return await service_label.patch(db, labels)
+    return await repository_label.patch(db, labels)
 
 
 @router.delete(
@@ -116,4 +116,4 @@ async def delete(
     Raises:
     HTTPException 404: If no label exists with the specified ID
     """
-    return await service_label.delete(db, label_id)
+    return await repository_label.delete(db, label_id)

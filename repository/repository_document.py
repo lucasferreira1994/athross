@@ -10,7 +10,6 @@ import models.model_label as model_label
 import api.schemas.schema_document as schema_document
 import api.schemas.schema_document_type as schema_document_type
 import api.schemas.schema_label as schema_label
-import services.service_document_type as service_document_type
 from models.model_document_type import DocumentType
 
 async def list_all(db: AsyncSession) -> List[schema_document.Document]:

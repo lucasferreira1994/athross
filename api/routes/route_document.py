@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 import api.schemas.schema_document as schema_document
-import services.service_document as service_document
+import repository.repository_document as repository_document
 from factory.factory_database import get_async_db
 
 router = APIRouter(
@@ -49,7 +49,7 @@ async def list_all(db: AsyncSession = Depends(get_async_db)):
         - created_at: Timestamp of creation
         - updated_at: Timestamp of last update
     """
-    response = await service_document.list_all(db)
+    response = await repository_document.list_all(db)
     return response
 
 @router.post(
@@ -106,7 +106,7 @@ async def create(
     Note:
     This is an upsert operation - existing documents with matching titles will be updated.
     """
-    response = await service_document.create_or_update_documents(db, documents)
+    response = await repository_document.create_or_update_documents(db, documents)
     return response
 
 @router.delete(
@@ -145,5 +145,5 @@ async def delete_all(db: AsyncSession = Depends(get_async_db)):
     Returns:
     dict: Confirmation message with operation result
     """
-    await service_document.delete_all(db)
+    await repository_document.delete_all(db)
     return {"detail": "All documents deleted"}
