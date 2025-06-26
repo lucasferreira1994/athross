@@ -34,51 +34,25 @@ def find_related_documents(documents, labels_to_find, visited=None, depth=0, max
     return related_docs
 
 
-def generate_relations_json(documents, initial_labels, output_file="relations.json"):
+def generate_relations_json(documents, initial_labels, output_file="relations.json", by_type=True):
     related_docs = find_related_documents(documents, initial_labels)
-    
-    docs_by_type = defaultdict(list)
-    for doc in related_docs:
-        docs_by_type[doc["type"]].append(doc)
-    
-    relations = []
-    for doc in related_docs:
-        if "document" in doc and "requires" in doc["document"]:
-            relations.append({
-                "source": doc["document"].get("name", doc["hash"]),
-                "targets": doc["document"]["requires"],
-                "type": "dependency"
-            })
     
     result = {
         "metadata": {
             "initial_labels": initial_labels,
             "total_documents": len(related_docs),
-            "document_types": list(docs_by_type.keys()),
             "timestamp": datetime.datetime.now().isoformat()
-        },
-        "documents_by_type": docs_by_type,
-        "relations": relations,
-        "network": {
-            "nodes": [],
-            "links": []
         }
     }
     
-    nodes = set()
-    for doc in related_docs:
-        node_id = doc.get("document", {}).get("name", doc["hash"])
-        nodes.add((node_id, doc["type"]))
-        
-        for label in doc.get("labels", []):
-            if label["key"] in ["database", "queue", "s3", "web"]:
-                result["network"]["links"].append({
-                    "source": node_id,
-                    "target": label["value"],
-                    "type": "uses"
-                })
-    
-    result["network"]["nodes"] = [{"id": n[0], "type": n[1]} for n in nodes]
+    if by_type:
+        docs_by_type = defaultdict(list)
+        for doc in related_docs:
+            docs_by_type[doc["type"]].append(doc)
+        result["documents_by_type"] = docs_by_type
+        result["metadata"]["document_types"] = list(docs_by_type.keys())
+    else:
+        result["documents"] = related_docs
     
     with open(output_file, "w") as f:
         json.dump(result, f, indent=4)
@@ -90,7 +64,8 @@ def generate_relations_json(documents, initial_labels, output_file="relations.js
 if __name__ == "__main__":
     import datetime
     name = f"documents_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open("documents.json", "r") as f:
+    path = "/home/alisson/projetos/athross/athross/mock/documents.json"
+    with open(path, "r") as f:
         documents = json.load(f)
     
     initial_labels = [
@@ -100,6 +75,5 @@ if __name__ == "__main__":
     result = generate_relations_json(
         documents=documents,
         initial_labels=initial_labels,
-        output_file=name
-    )
+        output_file=name    )
     

@@ -310,7 +310,7 @@
         "labels": [
             {
                 "key": "ipv4",
-                "value": "10.1.100.2"
+                "value": "10.1.100.1"
             },
             {
                 "key": "domain",
@@ -323,7 +323,7 @@
         ],
         "document": {
             "fqdn": "queue-stg.example.com",
-            "ipv4": "10.1.100.2"
+            "ipv4": "10.1.100.1"
         }
     },
     {
@@ -406,7 +406,7 @@
         "labels": [
             {
                 "key": "ipv4",
-                "value": "10.1.100.2"
+                "value": "10.1.100.1"
             },
             {
                 "key": "port",

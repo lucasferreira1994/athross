@@ -52,7 +52,14 @@ async def list_all(db: AsyncSession) -> List[schema_document.Document]:
 
     return response
 
-
+async def get_document_by_uuid(db: AsyncSession, uuid: uuid.UUID):
+    result = await db.execute(
+        select(model_document.Document)
+        .options(joinedload(model_document.Document.labels), joinedload(model_document.Document.type))
+        .where(model_document.Document.id == uuid)
+    )
+    document = result.unique().scalar_one_or_none()
+    return document
 
 async def create_or_update_documents(db: AsyncSession, documents_data: list):
     for doc_data in documents_data:
@@ -103,7 +110,21 @@ async def delete(db: AsyncSession, id: uuid.UUID):
     await db.commit()
 
 
-async def delete_all(db: AsyncSession):
-    await db.execute(sa_delete(model_document.Document))
+async def delete_by_uuids(db: AsyncSession, uuids_to_delete: List[uuid.UUID]):
+    if not uuids_to_delete:
+        return 0
+    
+    stmt = select(model_document.Document.id).where(model_document.Document.id.in_(uuids_to_delete))
+    result = await db.execute(stmt)
+    existing_uuids = {row[0] for row in result.all()}
+    
+    valid_uuids = [uid for uid in uuids_to_delete if uid in existing_uuids]
+    
+    if not valid_uuids:
+        return 0
+    
+    delete_stmt = sa_delete(model_document.Document).where(model_document.Document.id.in_(valid_uuids))
+    result = await db.execute(delete_stmt)
     await db.commit()
-    return
+    
+    return result.rowcount

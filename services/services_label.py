@@ -1,7 +1,6 @@
-import json
 import datetime
 from collections import defaultdict
-from typing import List, Dict, Set, Optional, Union, Any, DefaultDict
+from typing import List, Dict, Union, Any
 
 Document = Dict[str, Any]
 Label = Dict[str, str]
@@ -11,14 +10,7 @@ RelationsList = List[Dict[str, Union[str, List[str]]]]
 NetworkDict = Dict[str, List[Dict[str, str]]]
 
 
-def find_related_documents(
-        documents: DocumentsList,
-        labels_to_find: LabelsList,
-        visited: Optional[Set[str]] = None,
-        depth: int = 0,
-        max_depth: int = 10
-    ) -> DocumentsList:
-
+def find_related_documents(documents, labels_to_find, visited=None, depth=0, max_depth=10) -> DocumentsList:
     if visited is None:
         visited = set()
     if depth >= max_depth:
@@ -50,60 +42,25 @@ def find_related_documents(
     return related_docs
 
 
-def generate_relations_json(
-        documents: DocumentsList,
-        initial_labels: LabelsList,
-        output_file: str = "relations.json"
-    ) -> Dict[str, Union[Dict[str, Any], DefaultDict[str, List[Document]], RelationsList, NetworkDict]]:
-    
+def generate_relations_json(documents, initial_labels, by_type=False) -> Dict[str, Any]:
     related_docs = find_related_documents(documents, initial_labels)
-    
-    docs_by_type = defaultdict(list)
-    for doc in related_docs:
-        docs_by_type[doc["type"]].append(doc)
-    
-    relations = []
-    for doc in related_docs:
-        if "document" in doc and "requires" in doc["document"]:
-            relations.append({
-                "source": doc["document"].get("name", doc["hash"]),
-                "targets": doc["document"]["requires"],
-                "type": "dependency"
-            })
     
     result = {
         "metadata": {
             "initial_labels": initial_labels,
             "total_documents": len(related_docs),
-            "document_types": list(docs_by_type.keys()),
             "timestamp": datetime.datetime.now().isoformat()
-        },
-        "documents_by_type": docs_by_type,
-        "relations": relations,
-        "network": {
-            "nodes": [],
-            "links": []
         }
     }
     
-    nodes = set()
-    for doc in related_docs:
-        node_id = doc.get("document", {}).get("name", doc["hash"])
-        nodes.add((node_id, doc["type"]))
-        
-        for label in doc.get("labels", []):
-            if label["key"] in ["database", "queue", "s3", "web"]:
-                result["network"]["links"].append({
-                    "source": node_id,
-                    "target": label["value"],
-                    "type": "uses"
-                })
-    
-    result["network"]["nodes"] = [{"id": n[0], "type": n[1]} for n in nodes]
-    
-    with open(output_file, "w") as f:
-        json.dump(result, f, indent=4)
+    if by_type:
+        docs_by_type = defaultdict(list)
+        for doc in related_docs:
+            docs_by_type[doc["type"]].append(doc)
+        result["documents_by_type"] = docs_by_type
+        result["metadata"]["document_types"] = list(docs_by_type.keys())
+    else:
+        result["documents"] = related_docs
     
     return result
-
 

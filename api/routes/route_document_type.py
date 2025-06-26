@@ -40,21 +40,7 @@ async def list_all(
         description="Maximum number of items to return (up to 1000)"
     )
 ):
-    """
-    Retrieve paginated document types with collection metadata.
 
-    Parameters:
-    - **skip** (int, optional): Pagination offset (default: 0)
-    - **limit** (int, optional): Maximum items per page (default: 100, max: 1000)
-
-    Returns:
-    PaginatedResponse[DocumentType]: {
-        "items": List[DocumentType],
-        "total": int,
-        "skip": int,
-        "limit": int
-    }
-    """
     items, total = await repository_document_type.list_all(db, skip=skip, limit=limit)
     return {
         "items": items,
@@ -75,18 +61,7 @@ async def create(
     document_types: List[schema_document_type.DocumentTypeCreate],
     db: AsyncSession = Depends(get_async_db)
 ):
-    """
-    Create new document types or get existing ones.
 
-    Parameters:
-    - **document_types**: List of DocumentTypeCreate objects containing:
-        - name (str): Unique name of the document type (required)
-        - description (str, optional): Description of the document type
-        - metadata_schema (dict, optional): JSON schema for document metadata validation
-
-    Returns:
-    List[DocumentType]: Created or existing document type objects
-    """
     response = await repository_document_type.get_or_create(db, document_types)
     return response
 
@@ -105,21 +80,7 @@ async def update(
     document_types: List[schema_document_type.DocumentTypeCreate],
     db: AsyncSession = Depends(get_async_db)
 ):
-    """
-    Update existing document types by name.
 
-    Parameters:
-    - **document_types**: List of DocumentTypeCreate objects containing:
-        - name (str): Name of the document type to update (required)
-        - description (str, optional): New description
-        - metadata_schema (dict, optional): Updated validation schema
-
-    Returns:
-    List[DocumentType]: Updated document type objects
-
-    Raises:
-    HTTPException 404: If any document type to update is not found
-    """
     response = await repository_document_type.patch(db, document_types)
     return response
 
@@ -139,17 +100,5 @@ async def delete(
     document_type_id: UUID4,
     db: AsyncSession = Depends(get_async_db)
 ):
-    """
-    Delete a document type by ID.
-
-    Parameters:
-    - **document_type_id**: UUID4 - The unique identifier of the document type
-
-    Returns:
-    DocumentType: The deleted document type object
-
-    Raises:
-    HTTPException 404: If no document type exists with the specified ID
-    """
     response = await repository_document_type.delete(db, document_type_id)
     return response

@@ -1,9 +1,13 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
-import api.schemas.schema_document as schema_document
+import uuid
 import repository.repository_document as repository_document
 from factory.factory_database import get_async_db
+from services import services_label
+from repository import repository_label
+from api.schemas import schema_document, schema_search
 
 router = APIRouter(
     prefix="/documents",
@@ -37,18 +41,6 @@ router = APIRouter(
     }
 )
 async def list_all(db: AsyncSession = Depends(get_async_db)):
-    """
-    Retrieve all documents from the database.
-
-    Returns:
-    List[Document]: A list containing complete document objects with:
-        - id: Unique document identifier
-        - title: Document title
-        - content: Document content
-        - type_id: Associated document type ID
-        - created_at: Timestamp of creation
-        - updated_at: Timestamp of last update
-    """
     response = await repository_document.list_all(db)
     return response
 
@@ -87,25 +79,7 @@ async def create(
     documents: List[schema_document.DocumentCreate],
     db: AsyncSession = Depends(get_async_db)
 ):
-    """
-    Create or update multiple documents in a single operation.
 
-    Parameters:
-    - **documents**: List of DocumentCreate objects containing:
-        - title (str): Document title (required)
-        - content (str): Document content (required)
-        - type_id (UUID): Associated document type ID (required)
-        - metadata (dict, optional): Additional document metadata
-
-    Returns:
-    List[Document]: Created or updated document objects with complete details including:
-        - System-generated ID
-        - Timestamps
-        - Full document data
-
-    Note:
-    This is an upsert operation - existing documents with matching titles will be updated.
-    """
     response = await repository_document.create_or_update_documents(db, documents)
     return response
 
@@ -134,16 +108,69 @@ async def create(
         }
     }
 )
-async def delete_all(db: AsyncSession = Depends(get_async_db)):
-    """
-    WARNING: This will permanently delete ALL documents in the system.
+async def delete_list(db: AsyncSession = Depends(get_async_db), raw_documents: List[str] = []):
 
-    Security:
-    - Should be protected with admin-level authentication
-    - Consider adding confirmation step in production
+    if not raw_documents:
+        raise HTTPException(status_code=404, detail="Missing document UUIDs")
+    
+    documents_uuid = [uuid.UUID(document_uuid) for document_uuid in raw_documents]
+    await repository_document.delete_by_uuids(db, documents_uuid)
+    return JSONResponse({"detail": "All documents deleted"}, status_code=200)
 
-    Returns:
-    dict: Confirmation message with operation result
-    """
-    await repository_document.delete_all(db)
-    return {"detail": "All documents deleted"}
+
+@router.post(
+    "/search",
+    response_model=schema_search.DocumentSearchResponse,
+    summary="Search for documents by labels",
+    description="""
+    This endpoint allows searching for documents based on the provided labels, and returns associated metadata and derived relationships.
+
+    The response format depends on the by_type parameter:
+
+    - If by_type = False: the documents will be returned in a flat list under the documents field.
+
+    - If by_type = True: the documents will be grouped by type in a dictionary under the documents_by_type field.
+""",
+    responses={
+        200: {
+            "description": "Successful operation",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "flat_response": {
+                            "summary": "Response with (by_type=False)",
+                            "value": schema_search.DocumentSearchResponseFlat.Config.schema_extra["example"]
+                        },
+                        "grouped_response": {
+                            "summary": "Response with (by_type=True)",
+                            "value": schema_search.DocumentSearchResponseByType.Config.schema_extra["example"]
+                        }
+                    }
+                }
+            }
+        },
+        404: {
+            "description": "Document not found on database",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Document not found"}
+                }
+            }
+        }
+    }
+)
+async def search_on_document(
+    search: schema_search.DocumentSearch,
+    db: AsyncSession = Depends(get_async_db)
+):
+    document_obj = await repository_document.get_document_by_uuid(db, search.document_uuid)
+    if not document_obj:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    labels = await repository_label.get_or_create(db, search.labels)
+    
+    return services_label.generate_relations_json(
+        documents=document_obj.document,
+        initial_labels=labels,
+        by_type=search.by_type
+    )
