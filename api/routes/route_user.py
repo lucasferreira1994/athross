@@ -6,7 +6,7 @@ from database import get_async_db
 from models import model_user
 from api.schemas import schema_user
 from repository import repository_user
-from services import services_auth
+from services import service_auth
 from utils import security
 
 router = APIRouter(
@@ -166,7 +166,7 @@ async def login(
             detail="Invalid Credentials"
         )
 
-    token_data = services_auth.create_access_token(
+    token_data = service_auth.create_access_token(
         user_uuid=str(user.uuid),
         remember=user_credentials.remember
     )
@@ -194,6 +194,6 @@ async def login(
 )
 async def get_current_user(
     db: AsyncSession = Depends(get_async_db),
-    access_token: str = Depends(services_auth.verify_token)
+    access_token: str = Depends(service_auth.verify_token)
 ):
-    return await services_auth.get_user_by_token(db, access_token)
+    return await service_auth.get_user_by_token(db, access_token)

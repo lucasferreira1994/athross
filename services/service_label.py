@@ -1,48 +1,66 @@
-from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from typing import List
-import models.model_label as model_label
-import api.schemas.schema_label as schema_label
+import datetime
+from collections import defaultdict
+from typing import List, Dict, Union, Any
 
-async def list_all(db: AsyncSession):
-    result = await db.execute(
-        select(model_label.Label).order_by(model_label.Label.key)
-    )
-    return result.scalars().all()
+Document = Dict[str, Any]
+Label = Dict[str, str]
+DocumentsList = List[Document]
+LabelsList = List[Label]
+RelationsList = List[Dict[str, Union[str, List[str]]]]
+NetworkDict = Dict[str, List[Dict[str, str]]]
 
-async def get_or_create(db: AsyncSession, labels: List[schema_label.LabelCreate]):
-    input_keys = [label.key for label in labels]
 
-    result = await db.execute(
-        select(model_label.Label).where(model_label.Label.key.in_(input_keys))
-    )
-    existing_labels = result.scalars().all()
-    existing_keys = {label.key for label in existing_labels}
+def find_related_documents(documents, labels_to_find, visited=None, depth=0, max_depth=10) -> DocumentsList:
+    if visited is None:
+        visited = set()
+    if depth >= max_depth:
+        return []
+    related_docs = []
+    new_labels_to_find = []
 
-    new_labels = []
-    for label_data in labels:
-        if label_data.key not in existing_keys:
-            new_label = model_label.Label(key=label_data.key, value=label_data.value)
-            db.add(new_label)
-            new_labels.append(new_label)
+    for doc in documents:
+        has_all_labels = all(
+            any(label == l for l in doc.get("labels", []))
+            for label in labels_to_find
+        )
+        
+        if has_all_labels and doc["hash"] not in visited:
+            related_docs.append(doc)
+            visited.add(doc["hash"])
+            new_labels_to_find.extend(doc.get("labels", []))
 
-    if new_labels:
-        await db.commit()
-        for label in new_labels:
-            await db.refresh(label)
+    if new_labels_to_find and depth < max_depth:
+        deeper_docs = find_related_documents(
+            documents, 
+            new_labels_to_find, 
+            visited, 
+            depth + 1, 
+            max_depth
+        )
+        related_docs.extend(deeper_docs)
+    
+    return related_docs
 
-    return existing_labels + new_labels
 
-async def delete(db: AsyncSession, label_id: int):
-    result = await db.execute(
-        select(model_label.Label).where(model_label.Label.id == label_id)
-    )
-    existing_label = result.scalar_one_or_none()
+def generate_relations_json(documents, initial_labels, by_type=False) -> Dict[str, Any]:
+    related_docs = find_related_documents(documents, initial_labels)
+    
+    result = {
+        "metadata": {
+            "initial_labels": initial_labels,
+            "total_documents": len(related_docs),
+            "timestamp": datetime.datetime.now().isoformat()
+        }
+    }
+    
+    if by_type:
+        docs_by_type = defaultdict(list)
+        for doc in related_docs:
+            docs_by_type[doc["type"]].append(doc)
+        result["documents_by_type"] = docs_by_type
+        result["metadata"]["document_types"] = list(docs_by_type.keys())
+    else:
+        result["documents"] = related_docs
+    
+    return result
 
-    if not existing_label:
-        raise HTTPException(status_code=404, detail="Label not found")
-
-    await db.delete(existing_label)
-    await db.commit()
-    return existing_label

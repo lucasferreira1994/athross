@@ -27,16 +27,16 @@ async def test_create_list_delete_documents(async_client):
     ]
     logger.info(f"Payload de criação: {json.dumps(payload, indent=2)}")
 
-    create_resp = await async_client.post("/api/v1/documents/", json=payload)
+    create_resp = await async_client.post("/documents/", json=payload)
     logger.info(f"Response de criação: status={create_resp.status_code} body={create_resp.json()}")
-    assert create_resp.status_code == 200
+    assert create_resp.status_code == 201
 
     created_docs = create_resp.json()
     assert len(created_docs) == 1
     created_doc = created_docs[0]
     logger.info(f"Documento criado: {json.dumps(created_doc, indent=2)}")
 
-    list_resp = await async_client.get("/api/v1/documents/")
+    list_resp = await async_client.get("/documents/")
     logger.info(f"Response de listagem: status={list_resp.status_code} body={list_resp.json()}")
     assert list_resp.status_code == 200
     assert len(list_resp.json()) == 1
@@ -57,11 +57,11 @@ async def test_create_list_delete_documents(async_client):
         }
     ]
     logger.info(f"Payload de atualização: {json.dumps(update_payload, indent=2)}")
-    update_resp = await async_client.post("/api/v1/documents/", json=update_payload)
+    update_resp = await async_client.post("/documents/", json=update_payload)
     logger.info(f"Response de atualização: status={update_resp.status_code} body={update_resp.json()}")
-    assert update_resp.status_code == 200
+    assert update_resp.status_code == 201
 
-    final_list_resp = await async_client.get("/api/v1/documents/")
+    final_list_resp = await async_client.get("/documents/")
     logger.info(f"Response de listagem final: status={final_list_resp.status_code} body={final_list_resp.json()}")
     assert final_list_resp.status_code == 200
     final_docs = final_list_resp.json()
@@ -72,12 +72,12 @@ async def test_create_list_delete_documents(async_client):
 
     logger.info(f"Documento após update: {json.dumps(final_doc, indent=2)}")
 
-    delete_resp = await async_client.delete("/api/v1/documents/")
+    delete_resp = await async_client.request( method="DELETE", url="/documents/", json=[final_doc["id"]])
     logger.info(f"Response de delete_all: status={delete_resp.status_code} body={delete_resp.json()}")
     assert delete_resp.status_code == 200
     assert delete_resp.json()["detail"] == "All documents deleted"
 
-    empty_list_resp = await async_client.get("/api/v1/documents/")
+    empty_list_resp = await async_client.get("/documents/")
     logger.info(f"Response de listagem após delete_all: status={empty_list_resp.status_code} body={empty_list_resp.json()}")
     assert empty_list_resp.status_code == 200
     assert empty_list_resp.json() == []

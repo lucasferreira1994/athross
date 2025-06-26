@@ -16,8 +16,8 @@ async def test_label_crud(async_client):
         {"key": "teste3", "value": "teste23"}
     ]
 
-    create_response = await async_client.post("/api/v1/labels/", json=payload)
-    assert create_response.status_code == 200
+    create_response = await async_client.post("/labels/", json=payload)
+    assert create_response.status_code == 201
     created_labels = create_response.json()
     assert len(created_labels) == len(payload)
 
@@ -25,19 +25,19 @@ async def test_label_crud(async_client):
     for item in payload:
         assert item["key"] in created_keys
 
-    list_response = await async_client.get("/api/v1/labels/")
+    list_response = await async_client.get("/labels/")
     assert list_response.status_code == 200
     listed_labels = list_response.json()
     assert len(listed_labels) >= len(payload) 
 
     for label in created_labels:
-        delete_response = await async_client.delete(f"/api/v1/labels/{label['id']}")
+        delete_response = await async_client.delete(f"/labels/{label['id']}")
         assert delete_response.status_code == 200
         deleted_label = delete_response.json()
         assert deleted_label["id"] == label["id"]
         assert deleted_label["key"] == label["key"]
 
-    final_list_response = await async_client.get("/api/v1/labels/")
+    final_list_response = await async_client.get("/labels/")
     assert final_list_response.status_code == 200
     remaining_labels = final_list_response.json()
     remaining_ids = [label["id"] for label in remaining_labels]
