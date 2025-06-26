@@ -17,15 +17,9 @@ async def test_create_list_delete_document_types(async_client):
     ]
     logger.info(f"Payload utilizado para teste: {payload}")
 
-<<<<<<< HEAD
     create_resp = await async_client.post("/document-types/", json=payload)
     logger.info(f"Response da criação: {create_resp.json()}")
     assert create_resp.status_code == 201
-=======
-    create_resp = await async_client.post("/api/v1/document-types/", json=payload)
-    logger.info(f"Response da criação: {create_resp.json()}")
-    assert create_resp.status_code == 200
->>>>>>> 584054f2643d394146b28b1a7904c5d83a34115a
     logger.info(f"Resposta de criação OK, status code: {create_resp.status_code}")
 
     created_items = create_resp.json()
@@ -37,11 +31,7 @@ async def test_create_list_delete_document_types(async_client):
         assert expected in created_names
         logger.info(f"Item '{expected}' confirmado na resposta de criação")
 
-<<<<<<< HEAD
     list_resp = await async_client.get("/document-types/")
-=======
-    list_resp = await async_client.get("/api/v1/document-types/")
->>>>>>> 584054f2643d394146b28b1a7904c5d83a34115a
     logger.info(f"Response da listagem: status {list_resp.status_code}")
     assert list_resp.status_code == 200
 
@@ -57,13 +47,8 @@ async def test_create_list_delete_document_types(async_client):
 
     logger.info("Iniciando remoção dos itens listados")
     for item in list_data["items"]:
-<<<<<<< HEAD
         delete_resp = await async_client.delete(f"/document-types/{item['id']}")
         logger.info(f"Delete /document-types/{item['id']} status {delete_resp.status_code}")
-=======
-        delete_resp = await async_client.delete(f"/api/v1/document-types/{item['id']}")
-        logger.info(f"Delete /api/v1/document-types/{item['id']} status {delete_resp.status_code}")
->>>>>>> 584054f2643d394146b28b1a7904c5d83a34115a
         assert delete_resp.status_code == 200
 
         deleted_item = delete_resp.json()
@@ -72,11 +57,7 @@ async def test_create_list_delete_document_types(async_client):
         assert deleted_item["name"] == item["name"]
         logger.info(f"Item '{item['name']}' removido com sucesso")
 
-<<<<<<< HEAD
     final_list = await async_client.get("/document-types/")
-=======
-    final_list = await async_client.get("/api/v1/document-types/")
->>>>>>> 584054f2643d394146b28b1a7904c5d83a34115a
     logger.info(f"Response da listagem final após exclusões: status {final_list.status_code}")
     assert final_list.status_code == 200
 
@@ -91,11 +72,7 @@ async def test_delete_nonexistent_document_type(async_client):
     fake_id = str(uuid.uuid4())
     logger.info(f"Iniciando test_delete_nonexistent_document_type com id falso: {fake_id}")
 
-<<<<<<< HEAD
     resp = await async_client.delete(f"/document-types/{fake_id}")
-=======
-    resp = await async_client.delete(f"/api/v1/document-types/{fake_id}")
->>>>>>> 584054f2643d394146b28b1a7904c5d83a34115a
     logger.info(f"Response da exclusão de id inexistente: status {resp.status_code}, body: {resp.json()}")
     assert resp.status_code == 404
     assert resp.json()["detail"] == "DocumentType not found"

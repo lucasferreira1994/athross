@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +5,7 @@ from typing import List
 import uuid
 import repository.repository_document as repository_document
 from factory.factory_database import get_async_db
-from services import services_label
+from services import service_label
 from repository import repository_label
 from api.schemas import schema_document, schema_search
 
@@ -76,30 +75,10 @@ async def list_all(db: AsyncSession = Depends(get_async_db)):
         }
     }
 )
-=======
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
-from database import get_async_db
-import api.schemas.schema_document as schema_document
-import services.service_document as service_document
-
-router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
-
-
-@router.get("/", response_model=List[schema_document.Document])
-async def list_all(db: AsyncSession = Depends(get_async_db)):
-    response = await service_document.list_all(db)
-    return response
-
-
-@router.post("/", response_model=List[schema_document.Document])
->>>>>>> 584054f2643d394146b28b1a7904c5d83a34115a
 async def create(
     documents: List[schema_document.DocumentCreate],
     db: AsyncSession = Depends(get_async_db)
 ):
-<<<<<<< HEAD
 
     response = await repository_document.create_or_update_documents(db, documents)
     return response
@@ -190,18 +169,8 @@ async def search_on_document(
     
     labels = await repository_label.get_or_create(db, search.labels)
     
-    return services_label.generate_relations_json(
+    return service_label.generate_relations_json(
         documents=document_obj.document,
         initial_labels=labels,
         by_type=search.by_type
     )
-=======
-    response = await service_document.create_or_update_documents(db, documents)
-    return response
-
-
-@router.delete("/", response_model=None)
-async def delete_all(db: AsyncSession = Depends(get_async_db)):
-    await service_document.delete_all(db)
-    return {"detail": "All documents deleted"}
->>>>>>> 584054f2643d394146b28b1a7904c5d83a34115a
