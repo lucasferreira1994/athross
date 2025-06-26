@@ -139,11 +139,11 @@ async def delete_list(db: AsyncSession = Depends(get_async_db), raw_documents: L
                     "examples": {
                         "flat_response": {
                             "summary": "Response with (by_type=False)",
-                            "value": schema_search.DocumentSearchResponseFlat.Config.schema_extra["example"]
+                            "value": schema_search.DocumentSearchResponseFlat.ConfigDict.schema_extra["example"]
                         },
                         "grouped_response": {
                             "summary": "Response with (by_type=True)",
-                            "value": schema_search.DocumentSearchResponseByType.Config.schema_extra["example"]
+                            "value": schema_search.DocumentSearchResponseByType.ConfigDict.schema_extra["example"]
                         }
                     }
                 }

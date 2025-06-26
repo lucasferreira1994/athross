@@ -39,7 +39,7 @@ class DocumentSearchResponseFlat(BaseModel):
     metadata: DocumentMetadata
     documents: List[DocumentItem]
 
-    class Config:
+    class ConfigDict:
         schema_extra = {
             "example": {
                 "metadata": {
@@ -79,7 +79,7 @@ class DocumentSearchResponseByType(BaseModel):
     metadata: DocumentMetadata
     documents_by_type: Dict[str, List[DocumentItem]]
 
-    class Config:
+    class ConfigDict:
         schema_extra = {
             "example": {
                 "metadata": {

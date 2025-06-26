@@ -72,7 +72,7 @@ async def test_create_list_delete_documents(async_client):
 
     logger.info(f"Documento após update: {json.dumps(final_doc, indent=2)}")
 
-    delete_resp = await async_client.delete("/documents/")
+    delete_resp = await async_client.request( method="DELETE", url="/documents/", json=[final_doc["id"]])
     logger.info(f"Response de delete_all: status={delete_resp.status_code} body={delete_resp.json()}")
     assert delete_resp.status_code == 200
     assert delete_resp.json()["detail"] == "All documents deleted"
