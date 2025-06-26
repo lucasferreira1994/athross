@@ -1,0 +1,10 @@
+.venv/*
+*.db
+*.pyc
+__pycache__
+.pytest_cache
+test_logs
+<<<<<<< HEAD
+mock/
+=======
+>>>>>>> 584054f2643d394146b28b1a7904c5d83a34115a
