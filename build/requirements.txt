@@ -12,6 +12,10 @@ httpx==0.28.1
 idna==3.10
 iniconfig==2.1.0
 packaging==25.0
+<<<<<<< HEAD
+passlib==1.7.4
+=======
+>>>>>>> 584054f2643d394146b28b1a7904c5d83a34115a
 pluggy==1.6.0
 pydantic==2.11.5
 pydantic_core==2.33.2
