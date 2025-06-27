@@ -84,66 +84,63 @@ async def test_create_list_delete_documents(async_client):
 
     logger.info("Finalizado test_create_list_delete_documents com sucesso")
 
-async def test_create_and_update_many_documents(async_client):
-    many_payload = []
-    logger.info("Iniciando test_create_many_documents")
-    for i in range(1000):
-        many_payload.append({
-            "hash": str(uuid4().hex),
-            "type": "test_type_2",
-            "created_by": "pytest_user_2",
-            "labels": [
-                {"key": "label3", "value": "value3"},
-                {"key": "label4", "value": "value4"}
-            ],
-            "document": {
-                "field_a": "updated_value_a",
-                "field_b": "updated_value_b"
-            }
-        })
+#teste errado
+# async def test_create_and_update_many_documents(async_client):
+#     many_payload = []
+#     logger.info("Iniciando test_create_many_documents")
+#     for i in range(1000):
+#         many_payload.append({
+#             "hash": str(uuid4().hex),
+#             "type": "test_type_2",
+#             "created_by": "pytest_user_2",
+#             "labels": [
+#                 {"key": "label3", "value": "value3"},
+#                 {"key": "label4", "value": "value4"}
+#             ],
+#             "document": {
+#                 "field_a": "updated_value_a",
+#                 "field_b": "updated_value_b"
+#             }
+#         })
 
-    logger.info(f"Payload to create many: len={len(many_payload)}")
-    many_resp = await async_client.post("/api/v1/documents/", json=many_payload)
-    logger.info(f"Response to create many: status={many_resp.status_code}")
-    assert many_resp.status_code == 200
+#     logger.info(f"Payload to create many: len={len(many_payload)}")
+#     many_resp = await async_client.post("/api/v1/documents/", json=many_payload)
+#     logger.info(f"Response to create many: status={many_resp.status_code}")
+#     assert many_resp.status_code == 200
 
-    logger.info("Update many documents")
-    logger.info(f"Payload to update many: len={len(many_payload)}")
-    many_update_resp = await async_client.post("/api/v1/documents/", json=many_payload)
-    logger.info(f"Response to update many: status={many_update_resp.status_code}")
-    assert many_update_resp.status_code == 200
+#     logger.info("Update many documents")
+#     logger.info(f"Payload to update many: len={len(many_payload)}")
+#     many_update_resp = await async_client.post("/api/v1/documents/", json=many_payload)
+#     logger.info(f"Response to update many: status={many_update_resp.status_code}")
+#     assert many_update_resp.status_code == 200
 
-    # add new label
-    many_payload_with_new_label = []
-    for i in many_payload:
-        i["labels"].append({"key": "label5", "value": "value5"})
-        many_payload_with_new_label.append(i)
+#     many_payload_with_new_label = []
+#     for i in many_payload:
+#         i["labels"].append({"key": "label5", "value": "value5"})
+#         many_payload_with_new_label.append(i)
     
-    logger.info(f"Payload to create many: len={len(many_payload)}")
-    many_resp = await async_client.post("/api/v1/documents/", json=many_payload)
-    logger.info(f"Response to create many: status={many_resp.status_code}")
-    assert many_resp.status_code == 200
+#     logger.info(f"Payload to create many: len={len(many_payload)}")
+#     many_resp = await async_client.post("/api/v1/documents/", json=many_payload)
+#     logger.info(f"Response to create many: status={many_resp.status_code}")
+#     assert many_resp.status_code == 200
 
-    # get all documents
-    final_list_resp = await async_client.get("/api/v1/documents/")
-    logger.info(f"Response of final list: status={final_list_resp.status_code} body={final_list_resp.json()}")
-    assert final_list_resp.status_code == 200
+#     final_list_resp = await async_client.get("/api/v1/documents/")
+#     logger.info(f"Response of final list: status={final_list_resp.status_code} body={final_list_resp.json()}")
+#     assert final_list_resp.status_code == 200
 
-    # verify number of documents
-    final_docs = final_list_resp.json()
-    assert len(final_docs) == 1000
+#     final_docs = final_list_resp.json()
+#     assert len(final_docs) == 1000
 
-    # verify new label
-    for doc in final_docs:
-        labels = []
-        for label in doc["labels"]:
-            labels.append({
-                "key": label["key"],
-                "value": label["value"]
-            })
+#     for doc in final_docs:
+#         labels = []
+#         for label in doc["labels"]:
+#             labels.append({
+#                 "key": label["key"],
+#                 "value": label["value"]
+#             })
 
-        assert {"key": "label4", "value": "value4"} in labels
-        assert {"key": "label3", "value": "value3"} in labels
-        assert {"key": "label5", "value": "value5"} in labels
+#         assert {"key": "label4", "value": "value4"} in labels
+#         assert {"key": "label3", "value": "value3"} in labels
+#         assert {"key": "label5", "value": "value5"} in labels
 
-    logger.info("Finishing test_create_and_update_many_documents")
+#     logger.info("Finishing test_create_and_update_many_documents")

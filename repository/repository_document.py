@@ -33,7 +33,7 @@ async def list_all(db: AsyncSession) -> List[schema_document.Document]:
                     updated_at=document.type.updated_at
                 ),
                 created_by=document.created_by,
-                document=json.loads(document.document),
+                document=document.document,
                 labels=[
                     schema_label.Label(
                         id=label.id,
