@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Cookie
 from fastapi.responses import JSONResponse
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +8,7 @@ from api.schemas import schema_user
 from repository import repository_user
 from services import service_auth
 from utils import security
+
 
 router = APIRouter(
     prefix="/user",
@@ -148,17 +149,18 @@ async def login(
     """
     user_result = await db.execute(
         select(model_user.User).where(
-            model_user.User.email == user_credentials.email,
-            model_user.User.active == True
+            model_user.User.email == user_credentials.email
         )
     )
+    
     user = user_result.scalar_one_or_none()
 
-    if not user or not user.active:
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User Not Found or Inactive"
         )
+        
 
     if not security.verify_password(user_credentials.password, user.password):
         raise HTTPException(
@@ -177,7 +179,7 @@ async def login(
     response.set_cookie(
         key="access_token",
         value=access_token,
-        httponly=False,
+        httponly=True,
         max_age=max_age,
         expires=max_age,
         samesite="Lax",
@@ -194,6 +196,6 @@ async def login(
 )
 async def get_current_user(
     db: AsyncSession = Depends(get_async_db),
-    access_token: str = Depends(service_auth.verify_token)
+    access_token: str | None = Cookie(default=None)
 ):
     return await service_auth.get_user_by_token(db, access_token)
