@@ -149,7 +149,8 @@ async def login(
     """
     user_result = await db.execute(
         select(model_user.User).where(
-            model_user.User.email == user_credentials.email
+            model_user.User.email == user_credentials.email,
+            model_user.User.active == True
         )
     )
     

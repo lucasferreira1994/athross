@@ -2,9 +2,9 @@ import uuid
 import json
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload
 from sqlalchemy import delete as sa_delete
-from typing import List
+from typing import List, Dict
 import models.model_document as model_document
 import models.model_label as model_label
 import api.schemas.schema_document as schema_document
@@ -12,17 +12,20 @@ import api.schemas.schema_document_type as schema_document_type
 import api.schemas.schema_label as schema_label
 from models.model_document_type import DocumentType
 
-async def list_all(db: AsyncSession) -> List[schema_document.Document]:
-    response = []
+async def list_all(db: AsyncSession) -> Dict[str, List[schema_document.Document]]:
+    response = {}
 
     result = await db.execute(
         select(model_document.Document)
         .options(joinedload(model_document.Document.labels), joinedload(model_document.Document.type))
     )
     documents = result.unique().scalars().all()
-
+    
     for document in documents:
-        response.append(
+        if document.type.name not in response:
+            response[document.type.name] = []
+
+        response[document.type.name].append(
             schema_document.Document(
                 id=document.id,
                 hash=document.hash,
@@ -49,7 +52,7 @@ async def list_all(db: AsyncSession) -> List[schema_document.Document]:
                 updated_at=document.updated_at
             )
         )
-
+    print(response)
     return response
 
 async def get_document_by_uuid(db: AsyncSession, uuid: uuid.UUID):

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, Cookie, HTTPException
 from pydantic import UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
@@ -6,6 +6,7 @@ import api.schemas.schema_document_type as schema_document_type
 import repository.repository_document_type as repository_document_type
 from factory.factory_database import get_async_db
 from api.schemas.schema_paginator import PaginatedResponse
+from services import service_auth
 
 
 router = APIRouter(
@@ -38,9 +39,17 @@ async def list_all(
         100,
         le=1000,
         description="Maximum number of items to return (up to 1000)"
-    )
-):
+    ),
+    access_token: str | None = Cookie(default=None)
 
+):
+    user = await service_auth.get_user_by_token(db, access_token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User Not Found or Inactive"
+        )
+    
     items, total = await repository_document_type.list_all(db, skip=skip, limit=limit)
     return {
         "items": items,
@@ -59,9 +68,15 @@ async def list_all(
 )
 async def create(
     document_types: List[schema_document_type.DocumentTypeCreate],
-    db: AsyncSession = Depends(get_async_db)
+    db: AsyncSession = Depends(get_async_db),
+    access_token: str | None = Cookie(default=None)
 ):
-
+    user = await service_auth.get_user_by_token(db, access_token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User Not Found or Inactive"
+        )
     response = await repository_document_type.get_or_create(db, document_types)
     return response
 
@@ -78,9 +93,15 @@ async def create(
 )
 async def update(
     document_types: List[schema_document_type.DocumentTypeCreate],
-    db: AsyncSession = Depends(get_async_db)
+    db: AsyncSession = Depends(get_async_db),
+    access_token: str | None = Cookie(default=None)
 ):
-
+    user = await service_auth.get_user_by_token(db, access_token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User Not Found or Inactive"
+        )
     response = await repository_document_type.patch(db, document_types)
     return response
 
@@ -98,7 +119,15 @@ async def update(
 )
 async def delete(
     document_type_id: UUID4,
-    db: AsyncSession = Depends(get_async_db)
+    db: AsyncSession = Depends(get_async_db),
+    access_token: str | None = Cookie(default=None)
 ):
+    
+    user = await service_auth.get_user_by_token(db, access_token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User Not Found or Inactive"
+        )
     response = await repository_document_type.delete(db, document_type_id)
     return response

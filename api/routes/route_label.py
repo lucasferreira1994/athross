@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Cookie, status
 from pydantic import UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from database import get_async_db
 import api.schemas.schema_label as schema_label
 import repository.repository_label as repository_label
+from services import service_auth
+
 
 router = APIRouter(
     prefix="/labels",
@@ -23,13 +25,23 @@ router = APIRouter(
     description="Retrieves a list of all labels available in the system.",
     response_description="A list of label objects"
 )
-async def list_all(db: AsyncSession = Depends(get_async_db)):
+async def list_all(
+    db: AsyncSession = Depends(get_async_db),
+    access_token: str | None = Cookie(default=None)
+    ):
     """
     Retrieve all labels.
 
     Returns:
     List[Label]: A list containing all label objects with their details.
     """
+    user = await service_auth.get_user_by_token(db, access_token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User Not Found or Inactive"
+        )
+    
     return await repository_label.list_all(db)
 
 
@@ -44,7 +56,8 @@ async def list_all(db: AsyncSession = Depends(get_async_db)):
 )
 async def create(
     labels: List[schema_label.LabelCreate],
-    db: AsyncSession = Depends(get_async_db)
+    db: AsyncSession = Depends(get_async_db),
+    access_token: str | None = Cookie(default=None)
 ):
     """
     Create new labels or get existing ones.
@@ -57,6 +70,12 @@ async def create(
     Returns:
     List[Label]: List of label objects that were created or already existed.
     """
+    user = await service_auth.get_user_by_token(db, access_token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User Not Found or Inactive"
+        )
     return await repository_label.get_or_create(db, labels)
 
 
@@ -70,7 +89,8 @@ async def create(
 )
 async def update(
     labels: List[schema_label.LabelCreate],
-    db: AsyncSession = Depends(get_async_db)
+    db: AsyncSession = Depends(get_async_db),
+    access_token: str | None = Cookie(default=None)
 ):
     """
     Update existing labels.
@@ -86,6 +106,12 @@ async def update(
     Raises:
     HTTPException 404: If any of the labels to update are not found
     """
+    user = await service_auth.get_user_by_token(db, access_token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User Not Found or Inactive"
+        )
     return await repository_label.patch(db, labels)
 
 
@@ -102,7 +128,8 @@ async def update(
 )
 async def delete(
     label_id: UUID4,
-    db: AsyncSession = Depends(get_async_db)
+    db: AsyncSession = Depends(get_async_db),
+    access_token: str | None = Cookie(default=None)
 ):
     """
     Delete a label by ID.
@@ -116,4 +143,10 @@ async def delete(
     Raises:
     HTTPException 404: If no label exists with the specified ID
     """
+    user = await service_auth.get_user_by_token(db, access_token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User Not Found or Inactive"
+        )
     return await repository_label.delete(db, label_id)

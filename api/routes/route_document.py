@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Cookie
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
+from typing import List, Dict
 import uuid
 import repository.repository_document as repository_document
 from factory.factory_database import get_async_db
 from services import service_label
 from repository import repository_label
 from api.schemas import schema_document, schema_search
+from services import service_auth
+
 
 router = APIRouter(
     prefix="/documents",
@@ -20,7 +22,7 @@ router = APIRouter(
 
 @router.get(
     "/",
-    response_model=List[schema_document.Document],
+   response_model=Dict[str, List[schema_document.Document]],
     summary="List all documents",
     description="Retrieves a complete list of all documents in the system.",
     response_description="List of document objects with full details",
@@ -40,7 +42,17 @@ router = APIRouter(
         }
     }
 )
-async def list_all(db: AsyncSession = Depends(get_async_db)):
+async def list_all(
+    db: AsyncSession = Depends(get_async_db),
+    access_token: str | None = Cookie(default=None)
+):
+    user = await service_auth.get_user_by_token(db, access_token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User Not Found or Inactive"
+        )
+    
     response = await repository_document.list_all(db)
     return response
 
@@ -77,9 +89,16 @@ async def list_all(db: AsyncSession = Depends(get_async_db)):
 )
 async def create(
     documents: List[schema_document.DocumentCreate],
-    db: AsyncSession = Depends(get_async_db)
+    db: AsyncSession = Depends(get_async_db),
+    access_token: str | None = Cookie(default=None)
 ):
-
+    user = await service_auth.get_user_by_token(db, access_token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User Not Found or Inactive"
+        )
+    
     response = await repository_document.create_or_update_documents(db, documents)
     return response
 
@@ -108,8 +127,19 @@ async def create(
         }
     }
 )
-async def delete_list(db: AsyncSession = Depends(get_async_db), raw_documents: List[str] = []):
+async def delete_list(
+    db: AsyncSession = Depends(get_async_db),
+    raw_documents: List[str] = [],
+    access_token: str | None = Cookie(default=None)
+):
 
+    user = await service_auth.get_user_by_token(db, access_token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User Not Found or Inactive"
+        )
+    
     if not raw_documents:
         raise HTTPException(status_code=404, detail="Missing document UUIDs")
     
@@ -161,13 +191,21 @@ async def delete_list(db: AsyncSession = Depends(get_async_db), raw_documents: L
 )
 async def search_on_document(
     search: schema_search.DocumentSearch,
-    db: AsyncSession = Depends(get_async_db)
+    db: AsyncSession = Depends(get_async_db),
+    access_token: str | None = Cookie(default=None)
 ):
     document_obj = await repository_document.get_document_by_uuid(db, search.document_uuid)
     if not document_obj:
         raise HTTPException(status_code=404, detail="Document not found")
     
     labels = await repository_label.get_or_create(db, search.labels)
+    
+    user = await service_auth.get_user_by_token(db, access_token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User Not Found or Inactive"
+        )
     
     return service_label.generate_relations_json(
         documents=document_obj.document,
